@@ -1,10 +1,15 @@
 #include <Arduino.h>
+#include <pwm_lib.h>
+using namespace arduino_due::pwm_lib;
 
-#define MOTOR_PWM 6
-#define MOTOR_EN1 5
-#define MOTOR_EN2 4
-#define MOTOR_CS A0
-#define OPTO 7
+#define MOTOR_EN1 48
+#define MOTOR_EN2 49
+#define MOTOR_CS A5
+#define ENCODER_1 50
+#define ENCODER_2 51
+#define OPTO 52
+pwm<pwm_pin::PWML3_PC8> MOTOR_PWM;
+
 
 long int numberOfClicksOne = 0;
 long int numberOfClicksTwo = 0;
@@ -31,15 +36,15 @@ void setup()
   pinMode ( MOTOR_EN1, OUTPUT );
   pinMode ( MOTOR_EN2, OUTPUT );
   pinMode ( MOTOR_CS, INPUT );
-  pinMode ( MOTOR_PWM, OUTPUT );
   pinMode ( OPTO, INPUT );
 
+  MOTOR_PWM.start ( 4096, 0 );
+ 
   digitalWrite ( MOTOR_EN1, 0 );
   digitalWrite ( MOTOR_EN2, 1 );
-  analogWrite ( MOTOR_PWM, 0 );
 
-  attachInterrupt ( digitalPinToInterrupt(2), interruptHandlerOne, CHANGE );
-  attachInterrupt ( digitalPinToInterrupt(3), interruptHandlerTwo, CHANGE );
+  attachInterrupt ( digitalPinToInterrupt(ENCODER_1), interruptHandlerOne, CHANGE );
+  attachInterrupt ( digitalPinToInterrupt(ENCODER_2), interruptHandlerTwo, CHANGE );
 }
 
 int loopCount = 0;
@@ -58,11 +63,11 @@ void loop()
   Serial.print ( current );
 
   if ( loopCount >= 16 ) {
-    analogWrite( MOTOR_PWM, 0 );
+    MOTOR_PWM.set_duty( 0 );
     Serial.print( ", " );
     Serial.print ( 0 );
   } else { 
-    analogWrite ( MOTOR_PWM, loopCount*16 );
+    MOTOR_PWM.set_duty( loopCount*256 );
     Serial.print( ", " );
     Serial.print ( loopCount*16 );
   }
@@ -79,6 +84,6 @@ void loop()
   
   
   if ( loopCount++ >= 15 )
-    analogWrite( MOTOR_PWM, 0 );
+    MOTOR_PWM.set_duty( 0 );
 }
 
